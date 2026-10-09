@@ -1,0 +1,120 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Hyperbolic Particle Life</title>
+  <meta name="description" content="Artificial life on a closed hyperbolic surface. Thousands of particles, one simple rule, a universe shaped like a two-holed donut made of curved space.">
+  <meta property="og:title" content="Hyperbolic Particle Life">
+  <meta property="og:description" content="Artificial life on a genus-2 hyperbolic surface, rendered live in your browser.">
+  <meta property="og:image" content="https://pythonretarde.github.io/hyperbolic-particle-life/docs/media/hero.png">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%230a0c18' stroke='%236d8cff' stroke-width='3'/%3E%3Ccircle cx='32' cy='32' r='6' fill='%23ff5560'/%3E%3Ccircle cx='46' cy='28' r='4' fill='%2342d9fa'/%3E%3Ccircle cx='22' cy='42' r='3' fill='%235cf085'/%3E%3Ccircle cx='54' cy='40' r='2' fill='%23ffb840'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <canvas id="view" aria-label="Simulation view"></canvas>
+
+  <button id="panel-toggle" class="icon-button" aria-expanded="true" aria-controls="panel" title="Controls (H)">☰</button>
+
+  <aside id="panel" aria-label="Controls">
+    <header>
+      <h1>Hyperbolic Particle Life</h1>
+      <p class="tagline">Artificial life on a closed surface of curved space.</p>
+    </header>
+
+    <section>
+      <h2>World</h2>
+      <label class="row">Surface
+        <select id="genus">
+          <option value="2">Genus 2 · octagon (Bolza)</option>
+          <option value="3">Genus 3 · 12-gon</option>
+          <option value="4">Genus 4 · 16-gon</option>
+        </select>
+      </label>
+      <label class="row">Particles <output id="count-out"></output>
+        <input id="count" type="range" min="200" max="8000" step="100">
+      </label>
+      <label class="row">Species <output id="species-out"></output>
+        <input id="species" type="range" min="1" max="12" step="1">
+      </label>
+      <div class="buttons">
+        <button id="new-universe" title="New random rules and positions (N)">New universe</button>
+        <button id="scatter" title="Throw the particles around again (R)">Scatter</button>
+      </div>
+    </section>
+
+    <section>
+      <h2>Rules <span class="hint">drag a cell up/down</span></h2>
+      <div id="matrix" role="grid" aria-label="Attraction matrix: row species is attracted to column species"></div>
+      <div class="buttons presets">
+        <button data-preset="random">Random</button>
+        <button data-preset="symmetric">Symmetric</button>
+        <button data-preset="snakes">Snakes</button>
+        <button data-preset="hunt">Hunt</button>
+        <button data-preset="cells">Cells</button>
+      </div>
+      <label class="row">Evolution <output id="mutation-out"></output>
+        <input id="mutation" type="range" min="0" max="0.5" step="0.01">
+      </label>
+    </section>
+
+    <section>
+      <h2>Physics</h2>
+      <label class="row">Interaction radius <output id="radius-out"></output>
+        <input id="radius" type="range" min="0.12" max="0.8" step="0.01">
+      </label>
+      <label class="row">Force <output id="force-out"></output>
+        <input id="force" type="range" min="1" max="30" step="0.5">
+      </label>
+      <label class="row">Friction half-life <output id="friction-out"></output>
+        <input id="friction" type="range" min="0.01" max="0.3" step="0.005">
+      </label>
+      <label class="row">Personal space <output id="beta-out"></output>
+        <input id="beta" type="range" min="0.1" max="0.6" step="0.01">
+      </label>
+      <label class="row">Speed <output id="speed-out"></output>
+        <input id="speed" type="range" min="0" max="4" step="1">
+      </label>
+    </section>
+
+    <section>
+      <h2>View</h2>
+      <label class="check"><input id="tiling" type="checkbox"> Show the tiling <kbd>T</kbd></label>
+      <label class="check"><input id="copies" type="checkbox"> Show every copy of the universe <kbd>C</kbd></label>
+      <label class="check"><input id="klein" type="checkbox"> Klein model (geodesics look straight) <kbd>K</kbd></label>
+      <label class="check"><input id="glow" type="checkbox"> Glow <kbd>G</kbd></label>
+      <label class="check"><input id="tour" type="checkbox"> Auto-tour <kbd>P</kbd></label>
+      <label class="row">Particle size <output id="size-out"></output>
+        <input id="size" type="range" min="0.01" max="0.09" step="0.002">
+      </label>
+      <div class="buttons">
+        <button id="reset-view">Reset view</button>
+        <button id="share" title="Copy a link that recreates this universe">Copy link</button>
+        <button id="snapshot">Save PNG</button>
+      </div>
+    </section>
+
+    <footer>
+      <p>Drag to fly · <kbd>Shift</kbd>+drag to push · <kbd>Ctrl</kbd>+drag to pull · double-click to centre · wheel to zoom · <kbd>Space</kbd> pause</p>
+      <p><a id="about-link" href="#" role="button">What am I looking at?</a> · <a href="https://github.com/PYTHONRETARDE/hyperbolic-particle-life" target="_blank" rel="noopener">Source on GitHub</a></p>
+    </footer>
+  </aside>
+
+  <div id="hud" aria-live="off"></div>
+  <div id="toast" role="status"></div>
+
+  <div id="intro" role="dialog" aria-modal="true" aria-labelledby="intro-title" hidden>
+    <div class="card">
+      <h2 id="intro-title">You are inside a universe shaped like a two-holed donut.</h2>
+      <p>Thousands of coloured particles follow a single rule: <em>each colour is attracted to, or repelled by, every other colour</em>. From that alone, cells, worms and hunters emerge.</p>
+      <p>Their world is <strong>curved space</strong>, the hyperbolic plane, folded up into a closed surface. The octagon in the centre is the <em>entire</em> universe. Leave through any edge and you re-enter through the opposite one.</p>
+      <p>So every other octagon you see is the same universe again, seen along a different path around the holes. The copies shrink toward the rim because space itself grows exponentially there.</p>
+      <p class="controls">Drag to fly · Shift-drag to push · Ctrl-drag to pull · double-click to centre</p>
+      <p id="intro-error" class="error" hidden></p>
+      <button id="intro-close" class="primary">Enter</button>
+    </div>
+  </div>
+
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>

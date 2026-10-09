@@ -1,0 +1,27 @@
+{
+  "name": "hyperbolic-particle-life",
+  "version": "1.0.0",
+  "description": "Artificial life on a closed hyperbolic surface (genus 2 and up), rendered live with WebGL2.",
+  "type": "module",
+  "license": "MIT",
+  "author": "PYTHONRETARDE",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/PYTHONRETARDE/hyperbolic-particle-life.git"
+  },
+  "homepage": "https://pythonretarde.github.io/hyperbolic-particle-life/",
+  "keywords": ["particle-life", "artificial-life", "hyperbolic-geometry", "webgl2", "simulation", "generative-art", "emergence", "topology"],
+  "scripts": {
+    "start": "node scripts/serve.mjs",
+    "test": "node --test \"test/*.test.js\"",
+    "bench": "node scripts/bench.mjs",
+    "record": "node scripts/record.mjs"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "devDependencies": {
+    "gifenc": "^1.0.3",
+    "puppeteer-core": "^24.10.0"
+  }
+}
